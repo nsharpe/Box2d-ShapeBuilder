@@ -2,6 +2,10 @@
 eclipse.project.name = appName + '-core'
 
 dependencies {
+  // https://mvnrepository.com/artifact/org.projectlombok/lombok
+  compileOnly 'org.projectlombok:lombok:1.18.34'
+  annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
   api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.esotericsoftware:kryo:$kryoVersion"

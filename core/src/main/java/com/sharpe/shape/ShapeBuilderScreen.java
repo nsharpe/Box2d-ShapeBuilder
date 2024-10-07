@@ -1,6 +1,5 @@
 package com.sharpe.shape;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
@@ -10,16 +9,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -28,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ShapeBuilder implements Screen, InputProcessor {
+public class ShapeBuilderScreen implements Screen, InputProcessor {
 
     private final List<ShapeBeingBuilt> shapesBeingBuilt = new ArrayList<>();
     private ShapeBeingBuilt currentShapeBeingBuilt;
@@ -37,20 +28,22 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     private Viewport viewport;
     private Camera camera;
-    private Stage menu;
-    private SpriteBatch spriteBatch;
     private Texture currentTexture;
     private ShapeRenderer shapeRenderer;
-    private TextureAtlas atlas;
-    private Skin skin;
+
+    private InputProcessor wrappedInputProcessor;
 
     Color backgroudColor = Color.DARK_GRAY;
 
     private static final float POINT_WORLD_SIZE=1f;
 
+    public ShapeBuilderScreen(InputProcessor wrappedInputProcessor) {
+        this.wrappedInputProcessor = wrappedInputProcessor;
+    }
+
     @Override
     public void show() {
-        spriteBatch = new SpriteBatch();
+
         camera = new OrthographicCamera();
         viewport = new ScalingViewport(Scaling.fill,
             Gdx.graphics.getWidth(),
@@ -61,28 +54,8 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        menu = new Stage(viewport, spriteBatch);
         this.shapeRenderer = new ShapeRenderer();
         add(new ShapeBeingBuilt());
-
-        atlas = new TextureAtlas("ui/uiskin.atlas");
-        skin = new Skin(Gdx.files.internal("ui/uiskin.json"),atlas);
-
-        //Create Table
-        Table mainTable = new Table();
-        //Set table to fill stage
-        mainTable.setFillParent(true);
-        //Set alignment of contents in the table.
-        mainTable.bottom();
-        mainTable.right();
-
-        TextButton exitButton = new TextButton("Exit", skin);
-
-        exitButton.addListener(clickListener(()->Gdx.app.exit()));
-
-        mainTable.add(exitButton);
-
-        menu.addActor(mainTable);
 
         Gdx.input.setInputProcessor(this);
     }
@@ -98,9 +71,6 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
 
         shapesBeingBuilt.forEach(this::render);
-
-        menu.act(delta);
-        menu.draw();
 
     }
 
@@ -163,17 +133,12 @@ public class ShapeBuilder implements Screen, InputProcessor {
         if (currentTexture != null) {
             currentTexture.dispose();
         }
-        menu.dispose();
         shapeRenderer.dispose();
-        spriteBatch.dispose();
-        skin.dispose();
-        atlas.dispose();
-
     }
 
     @Override
     public boolean keyDown(int keycode) {
-        if (menu.keyDown(keycode)) {
+        if (wrappedInputProcessor.keyDown(keycode)) {
             return true;
         }
 
@@ -182,7 +147,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        if (menu.keyUp(keycode)) {
+        if (wrappedInputProcessor.keyUp(keycode)) {
             return true;
         }
         return false;
@@ -190,7 +155,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean keyTyped(char character) {
-        if (menu.keyTyped(character)) {
+        if (wrappedInputProcessor.keyTyped(character)) {
             return true;
         }
 
@@ -205,7 +170,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (menu.touchDown(screenX, screenY, pointer, button)) {
+        if (wrappedInputProcessor.touchDown(screenX, screenY, pointer, button)) {
             return true;
         }
         if(Input.Buttons.LEFT == button) {
@@ -223,7 +188,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (menu.touchUp(screenX, screenY, pointer, button)) {
+        if (wrappedInputProcessor.touchUp(screenX, screenY, pointer, button)) {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
@@ -239,7 +204,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        if (menu.touchCancelled(screenX, screenY, pointer, button)) {
+        if (wrappedInputProcessor.touchCancelled(screenX, screenY, pointer, button)) {
             return true;
         }
         return false;
@@ -247,7 +212,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (menu.touchDragged(screenX, screenY, pointer)) {
+        if (wrappedInputProcessor.touchDragged(screenX, screenY, pointer)) {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
@@ -259,7 +224,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        if (menu.mouseMoved(screenX, screenY)) {
+        if (wrappedInputProcessor.mouseMoved(screenX, screenY)) {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
@@ -271,7 +236,7 @@ public class ShapeBuilder implements Screen, InputProcessor {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        if (this.menu.scrolled(amountX, amountY)) {
+        if (this.wrappedInputProcessor.scrolled(amountX, amountY)) {
             return true;
         }
         return false;
@@ -313,15 +278,6 @@ public class ShapeBuilder implements Screen, InputProcessor {
         private ShapeBeingBuilt() {
             this(new ArrayList<>());
         }
-    }
-
-    public static ClickListener clickListener(Runnable runnable){
-        return new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                runnable.run();
-            }
-        };
     }
 
 }
