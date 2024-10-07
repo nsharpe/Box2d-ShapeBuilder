@@ -1,6 +1,7 @@
 package com.sharpe.shape;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -22,6 +24,7 @@ import com.kotcrab.vis.ui.widget.file.FileChooserListener;
 import com.sharpe.libgdx.file.SinglePathChooserListener;
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.File;
 import java.nio.file.Path;
 
 public class ShapeBuilderGUI implements Screen {
@@ -62,6 +65,7 @@ public class ShapeBuilderGUI implements Screen {
         String startingDirectory = preferences.getString("startingDirectory");
         if(startingDirectory != null) {
             imageLoader.setDirectory(startingDirectory);
+            bodySaver.setDirectory(startingDirectory);
         }
         imageLoader.setFileFilter((file)->
                     file.canRead()
@@ -72,6 +76,8 @@ public class ShapeBuilderGUI implements Screen {
         imageLoader.setListener(SinglePathChooserListener.of(x->
             x.ifPresent(this::imageLoader)
         ));
+
+        bodySaver.setListener(SinglePathChooserListener.of(x->x.ifPresent(this::saveShape)));
 
         menu = new Stage(viewport, spriteBatch);
 
@@ -118,6 +124,27 @@ public class ShapeBuilderGUI implements Screen {
 
     private void openLoadImage(){
         menu.addActor(imageLoader);
+    }
+
+    private void saveShape(Path path){
+        preferences.putString("startingDirectory",path.getParent().toString());
+        preferences.flush();
+        if(!path.toString().endsWith(".json")){
+            path = new File(path.toString()+".json").toPath();
+        }
+        try {
+            this.shapeBuilderScreen.save(path.toFile());
+        }catch (Exception e){
+            Dialog dialog = new Dialog("Warning", skin, "dialog") {
+                public void result(Object obj) {
+                    // Ignored;
+                }
+            };
+            dialog.text("Could not save due to error");
+            dialog.button("Confirm", true); //sends "true" as the result
+            dialog.key(Input.Keys.ENTER, true); //sends "true" when the ENTER key is pressed
+            dialog.show(menu);
+        }
     }
 
     private void imageLoader(Path path){

@@ -19,8 +19,12 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -253,7 +257,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
-        System.out.println(currentMousePosition);
+
         if(selectedVector!=null){
             selectedVector.set(currentMousePosition);
         }
@@ -266,6 +270,20 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             return true;
         }
         return false;
+    }
+
+    public void save(File file){
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        if(!FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("json")){
+            System.out.println("throwing exception:"+file.getName());
+            throw new IllegalStateException("Must be saved to a json file");
+        }
+        try {
+            objectMapper.writeValue(file,shapesBeingBuilt);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void loadTexture(File file) {
@@ -288,8 +306,8 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         sprite = new Sprite(currentTexture);
 
         sprite.setSize(width,height);
-        sprite.setOrigin(0.5f,.5f);
-        sprite.setPosition(0.5f,0.5f);
+        sprite.setOrigin(width/2f,height/2f);
+        sprite.setPosition(width/2f,height/2f);
     }
 
     private Optional<Vector2> getVector(final float screenX, final float screenY) {
