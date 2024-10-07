@@ -1,6 +1,7 @@
 package com.sharpe.shape;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -15,6 +16,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.kotcrab.vis.ui.VisUI;
+import com.kotcrab.vis.ui.widget.file.FileChooser;
+import com.kotcrab.vis.ui.widget.file.FileChooserListener;
+import com.sharpe.libgdx.file.SinglePathChooserListener;
+import org.apache.commons.io.FilenameUtils;
+
+import java.nio.file.Path;
 
 public class ShapeBuilderGUI implements Screen {
 
@@ -30,8 +38,18 @@ public class ShapeBuilderGUI implements Screen {
 
     private Table controlTable;
 
+    private FileChooser bodySaver;
+    private FileChooser imageLoader;
+    private Preferences preferences;
+
     @Override
     public void show() {
+        VisUI.load();
+
+
+        preferences = Gdx.app.getPreferences("ShapeBuilderScreen");
+
+
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera();
         viewport = new ScalingViewport(Scaling.fill,
@@ -39,7 +57,21 @@ public class ShapeBuilderGUI implements Screen {
             Gdx.graphics.getHeight(),
             camera);
 
-        viewport.setWorldSize(Gdx.graphics.getWidth()/3f,Gdx.graphics.getHeight()/3f);
+        bodySaver = new FileChooser(FileChooser.Mode.SAVE);
+        imageLoader = new FileChooser(FileChooser.Mode.OPEN);
+        String startingDirectory = preferences.getString("startingDirectory");
+        if(startingDirectory != null) {
+            imageLoader.setDirectory(startingDirectory);
+        }
+        imageLoader.setFileFilter((file)->
+                    file.canRead()
+                    && !file.isHidden()
+                    && (FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("png")|| file.isDirectory()));
+
+        imageLoader.setMultiSelectionEnabled(false);
+        imageLoader.setListener(SinglePathChooserListener.of(x->
+            x.ifPresent(this::imageLoader)
+        ));
 
         menu = new Stage(viewport, spriteBatch);
 
@@ -48,12 +80,23 @@ public class ShapeBuilderGUI implements Screen {
 
         //Create Table
         controlTable = new Table();
+        controlTable.setTransform(true);
+        controlTable.padRight(600f);
+        controlTable.padBottom(300f);
+        controlTable.setScale(1.3f);
         //Set table to fill stage
         controlTable.setFillParent(true);
 
-        TextButton exitButton = textButton("exit",() -> Gdx.app.exit());
+        TextButton loadImage = textButton("Load Image", this::openLoadImage);
+        TextButton saveButton = textButton("Save", this::openSaveBody);
+        TextButton exitButton = textButton("Exit",() -> Gdx.app.exit());
 
+        controlTable.add(loadImage);
+        controlTable.row();
+        controlTable.add(saveButton);
+        controlTable.row();
         controlTable.add(exitButton);
+
         controlTable.setTransform(true);
 
         //Set alignment of contents in the table.
@@ -67,6 +110,20 @@ public class ShapeBuilderGUI implements Screen {
         shapeBuilderScreen.show();
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void openSaveBody(){
+        menu.addActor(bodySaver);
+    }
+
+    private void openLoadImage(){
+        menu.addActor(imageLoader);
+    }
+
+    private void imageLoader(Path path){
+        preferences.putString("startingDirectory",path.getParent().toString());
+        preferences.flush();
+        this.shapeBuilderScreen.loadTexture(path.toFile());
     }
 
     @Override
@@ -83,7 +140,9 @@ public class ShapeBuilderGUI implements Screen {
 
         shapeBuilderScreen.resize(width, height);
         viewport.update(width,height);
+        camera.update();
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 1);
+        spriteBatch.getProjectionMatrix().set(camera.combined);
     }
 
     @Override
@@ -108,15 +167,18 @@ public class ShapeBuilderGUI implements Screen {
         this.atlas.dispose();
         this.spriteBatch.dispose();
         this.skin.dispose();
+
+        VisUI.dispose();
     }
 
     public TextButton textButton(String text, Runnable runnable){
-        TextButton button = new TextButton("Exit", skin);
+        TextButton button = new TextButton(text, skin);
         button.setTransform(true);
-
+        button.setScale(2);
         button.addListener(clickListener(runnable));
         return button;
     }
+
 
 
     public static ClickListener clickListener(Runnable runnable) {

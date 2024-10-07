@@ -3,18 +3,24 @@ package com.sharpe.shape;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +36,17 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     private Camera camera;
     private Texture currentTexture;
     private ShapeRenderer shapeRenderer;
+    private SpriteBatch spriteBatch;
 
     private InputProcessor wrappedInputProcessor;
 
-    Color backgroudColor = Color.DARK_GRAY;
+    private Color backgroudColor = Color.DARK_GRAY;
 
-    private static final float POINT_WORLD_SIZE=1f;
+    private Sprite sprite;
+
+    private static final float POINT_WORLD_SIZE=.015f;
+
+    private static final float WORLD_SIZE = 500;
 
     public ShapeBuilderScreen(InputProcessor wrappedInputProcessor) {
         this.wrappedInputProcessor = wrappedInputProcessor;
@@ -45,14 +56,13 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     public void show() {
 
         camera = new OrthographicCamera();
-        viewport = new ScalingViewport(Scaling.fill,
-            Gdx.graphics.getWidth(),
+        viewport = new FitViewport(Gdx.graphics.getWidth(),
             Gdx.graphics.getHeight(),
             camera);
+        viewport.setWorldHeight(2);
+        viewport.setWorldWidth(2);
 
-        viewport.setWorldSize(500,500);
-
-        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
         add(new ShapeBeingBuilt());
@@ -65,10 +75,22 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         Gdx.gl.glClearColor(backgroudColor.r,backgroudColor.g,backgroudColor.b,backgroudColor.a);
         viewport.apply();
+
+        camera.position.x = viewport.getWorldWidth()/2;
+        camera.position.y = viewport.getWorldHeight()/2;;
         camera.update();
+
+        spriteBatch.getProjectionMatrix().set(camera.combined);
 
         shapeRenderer.setProjectionMatrix(camera.combined);
 
+        if(sprite!=null) {
+            spriteBatch.begin();
+
+            sprite.draw(spriteBatch);
+
+            spriteBatch.end();
+        }
 
         shapesBeingBuilt.forEach(this::render);
 
@@ -110,7 +132,9 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
     @Override
     public void resize(int width, int height) {
+        camera.position.set(0,0, 0);
         viewport.update(width,height);
+        viewport.apply();
     }
 
     @Override
@@ -133,6 +157,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         if (currentTexture != null) {
             currentTexture.dispose();
         }
+        spriteBatch.dispose();
         shapeRenderer.dispose();
     }
 
@@ -228,6 +253,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
+        System.out.println(currentMousePosition);
         if(selectedVector!=null){
             selectedVector.set(currentMousePosition);
         }
@@ -242,12 +268,28 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         return false;
     }
 
-    private void loadTexture(String assetLocation) {
+    public void loadTexture(File file) {
         if (currentTexture != null) {
             currentTexture.dispose();
         }
 
-        currentTexture = new Texture(assetLocation);
+        currentTexture = new Texture(new FileHandle(file));
+        float height = currentTexture.getHeight();
+        float width = currentTexture.getWidth();
+
+        if(height > width){
+            width = height/width;
+            height = 1;
+        }else{
+            height = width/height;
+            width = 1;
+        }
+
+        sprite = new Sprite(currentTexture);
+
+        sprite.setSize(width,height);
+        sprite.setOrigin(0.5f,.5f);
+        sprite.setPosition(0.5f,0.5f);
     }
 
     private Optional<Vector2> getVector(final float screenX, final float screenY) {

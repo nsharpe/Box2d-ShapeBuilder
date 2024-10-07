@@ -6,6 +6,12 @@ dependencies {
   compileOnly 'org.projectlombok:lombok:1.18.34'
   annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
+  // https://mvnrepository.com/artifact/com.kotcrab.vis/vis-ui
+  implementation 'com.kotcrab.vis:vis-ui:1.5.3'
+
+  // https://mvnrepository.com/artifact/commons-io/commons-io
+  implementation 'commons-io:commons-io:2.17.0'
+
   api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.esotericsoftware:kryo:$kryoVersion"
