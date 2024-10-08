@@ -16,7 +16,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import lombok.Getter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -104,13 +108,15 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
         for(Vector2 vector2: sbb.shapeVectors){
             drawVectorAsPosition(vector2);
-            if(previous!=null && sbb.isContinuous()){
+            if(previous!=null ){
                 drawLine(previous,vector2);
             }
             previous = vector2;
         }
 
-        drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
+        if(sbb.isContinuous) {
+            drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
+        }
 
 
     }
@@ -329,7 +335,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             .findAny();
     }
 
-    private void add(String name, ShapeScaffold shapeScaffold){
+    public void add(String name, ShapeScaffold shapeScaffold){
         this.currentShapeScaffold = shapeScaffold;
         this.bodyWithImage.shapeScaffold.put(name,shapeScaffold);
     }
@@ -338,13 +344,13 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         return theVector.x >= minX && theVector.x <= maxX && theVector.y >= minY && theVector.y <= maxY;
     }
 
-    private record BodyWithImage(Map<String, ShapeScaffold> shapeScaffold){
+    public record BodyWithImage(Map<String, ShapeScaffold> shapeScaffold){
         public BodyWithImage(){
             this(new HashMap<>());
         }
     }
 
-    private record ShapeScaffold(List<Vector2> shapeVectors,
+    public record ShapeScaffold(List<Vector2> shapeVectors,
                                  boolean isContinuous) {
 
         public ShapeScaffold(boolean isContinuous) {

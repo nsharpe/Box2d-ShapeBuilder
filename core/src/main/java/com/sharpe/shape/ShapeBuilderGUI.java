@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
@@ -90,10 +91,13 @@ public class ShapeBuilderGUI implements Screen {
         //Set table to fill stage
         controlTable.setFillParent(true);
 
+        TextButton newShapeButton = textButton("New Shape", this::createShapeNameDialogue);
         TextButton loadImage = textButton("Load Image", this::openLoadImage);
         TextButton saveButton = textButton("Save", this::openSaveBody);
         TextButton exitButton = textButton("Exit",() -> Gdx.app.exit());
 
+        controlTable.add(newShapeButton);
+        controlTable.row();
         controlTable.add(loadImage);
         controlTable.row();
         controlTable.add(saveButton);
@@ -133,8 +137,8 @@ public class ShapeBuilderGUI implements Screen {
                     // Ignored;
                 }
             };
-            dialog.text("Could not save due to error");
-            dialog.button("Confirm", true); //sends "true" as the result
+            Gdx.app.error("ShapeBuilderGUI","Error saving file", e);
+            dialog.button("Error Saving", true); //sends "true" as the result
             dialog.key(Input.Keys.ENTER, true); //sends "true" when the ENTER key is pressed
             dialog.show(menu);
         }
@@ -189,6 +193,22 @@ public class ShapeBuilderGUI implements Screen {
         this.skin.dispose();
 
         VisUI.dispose();
+    }
+
+    public void createShapeNameDialogue(){
+        TextField nameField = new TextField("",skin);
+        Dialog dialog = new Dialog("Create Shape", skin, "dialog") {
+            public void result(Object obj) {
+                shapeBuilderScreen.add(nameField.getText(),new ShapeBuilderScreen.ShapeScaffold(false));
+            }
+        };
+        dialog.text("Create Shape");
+
+        dialog.button("OK", true);//sends "true" as the result
+        dialog.getContentTable().row();
+        dialog.getContentTable().add(nameField);
+        dialog.key(Input.Keys.ENTER, true); //sends "true" when the ENTER key is pressed
+        dialog.show(menu);
     }
 
     public TextButton textButton(String text, Runnable runnable){
