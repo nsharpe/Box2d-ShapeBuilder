@@ -16,11 +16,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import lombok.Getter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -80,13 +76,21 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         Gdx.gl.glClearColor(backgroudColor.r,backgroudColor.g,backgroudColor.b,backgroudColor.a);
         viewport.apply();
 
-        camera.position.x = viewport.getWorldWidth()/2;
-        camera.position.y = viewport.getWorldHeight()/2;;
+        camera.position.x = 0;
+        camera.position.y = 0;
         camera.update();
 
         spriteBatch.getProjectionMatrix().set(camera.combined);
 
         shapeRenderer.setProjectionMatrix(camera.combined);
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.line(-.5f,-0.5f,-0.5f,0.5f);
+        shapeRenderer.line(-0.5f,-0.5f,0.5f,-0.5f);
+        shapeRenderer.line(0.5f,0.5f,0.5f,-0.5f);
+        shapeRenderer.line(0.5f,0.5f,-0.5f,0.5f);
+        shapeRenderer.end();
 
         if(sprite!=null) {
             spriteBatch.begin();
@@ -268,6 +272,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
+        System.out.println(currentMousePosition);
 
         if(selectedVector!=null){
             selectedVector.set(currentMousePosition);
@@ -316,9 +321,9 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
         sprite = new Sprite(currentTexture);
 
-        sprite.setSize(width,height);
-        sprite.setOrigin(width/2f,height/2f);
-        sprite.setPosition(width/2f,height/2f);
+        sprite.setOrigin(height/2f,width/2f);
+        sprite.setBounds(-width/2f,-height/2f,width,height);
+        sprite.setOrigin(height/2f,width/2f);
     }
 
     private Optional<Vector2> getVector(final float screenX, final float screenY) {

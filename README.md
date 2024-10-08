@@ -4,6 +4,10 @@ A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://git
 
 This project was generated with a template including simple application launchers and a main class extending `Game` that sets the first screen.
 
+It was created because current open source box2d shape builders do not work on my machine due to something with gl3.  The developer took 4 days of trying to resolve the issue before starting their own solution 
+
+This project will use libgdx instead of the swing/libgdx combo of box2d-Editor to reduce the number of dependencies and to prevent the interplay of those two frameworks causing problems such as the ones i ran into earlier trying to run box2d-Editor. 
+
 ## Platforms
 
 - `core`: Main module with the application logic shared by all platforms.
