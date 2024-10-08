@@ -65,7 +65,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
-        add("main",new ShapeScaffold(false,false));
+        add("main",new ShapeScaffold(true));
 
         Gdx.input.setInputProcessor(this);
     }
@@ -104,7 +104,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
         for(Vector2 vector2: sbb.shapeVectors){
             drawVectorAsPosition(vector2);
-            if(previous!=null){
+            if(previous!=null && sbb.isContinuous()){
                 drawLine(previous,vector2);
             }
             previous = vector2;
@@ -188,6 +188,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             if(currentShapeScaffold !=null){
                 selectedVector = new Vector2(currentMousePosition);
                 currentShapeScaffold.shapeVectors.add(selectedVector);
+                return true;
             }
         }
 
@@ -195,6 +196,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             if(currentShapeScaffold !=null && selectedVector != null){
                 currentShapeScaffold.shapeVectors.remove(selectedVector);
                 selectedVector = null;
+                return true;
             }
         }
         return false;
@@ -343,12 +345,10 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     }
 
     private record ShapeScaffold(List<Vector2> shapeVectors,
-                                 boolean isSensor,
                                  boolean isContinuous) {
 
-        public ShapeScaffold(boolean isSensor,
-                             boolean isContinuous) {
-            this(new ArrayList<>(),isSensor, isContinuous);
+        public ShapeScaffold(boolean isContinuous) {
+            this(new ArrayList<>(), isContinuous);
         }
     }
 

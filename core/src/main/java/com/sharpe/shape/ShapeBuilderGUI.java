@@ -20,7 +20,6 @@ import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
-import com.kotcrab.vis.ui.widget.file.FileChooserListener;
 import com.sharpe.libgdx.file.SinglePathChooserListener;
 import org.apache.commons.io.FilenameUtils;
 
@@ -49,9 +48,7 @@ public class ShapeBuilderGUI implements Screen {
     public void show() {
         VisUI.load();
 
-
         preferences = Gdx.app.getPreferences("ShapeBuilderScreen");
-
 
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera();
@@ -87,9 +84,9 @@ public class ShapeBuilderGUI implements Screen {
         //Create Table
         controlTable = new Table();
         controlTable.setTransform(true);
-        controlTable.padRight(600f);
-        controlTable.padBottom(300f);
-        controlTable.setScale(1.3f);
+        controlTable.padRight(80f);
+        controlTable.padTop(500f);
+        controlTable.setScale(2f);
         //Set table to fill stage
         controlTable.setFillParent(true);
 
@@ -104,10 +101,6 @@ public class ShapeBuilderGUI implements Screen {
         controlTable.add(exitButton);
 
         controlTable.setTransform(true);
-
-        //Set alignment of contents in the table.
-        controlTable.bottom();
-        controlTable.right();
 
         menu.addActor(controlTable);
 
@@ -201,7 +194,6 @@ public class ShapeBuilderGUI implements Screen {
     public TextButton textButton(String text, Runnable runnable){
         TextButton button = new TextButton(text, skin);
         button.setTransform(true);
-        button.setScale(2);
         button.addListener(clickListener(runnable));
         return button;
     }
