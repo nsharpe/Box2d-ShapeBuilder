@@ -17,20 +17,17 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharpe.shape.builder.StoredShape;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class ShapeBuilderScreen implements Screen, InputProcessor {
 
-    private final BodyWithImage bodyWithImage = new BodyWithImage();
-    private ShapeScaffold currentShapeScaffold;
+    private final StoredShape.BodyWithImage bodyWithImage = new StoredShape.BodyWithImage();
+    private StoredShape.ShapeScaffold currentShapeScaffold;
     private Vector2 selectedVector;
     private Vector2 currentMousePosition;
 
@@ -65,7 +62,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
-        add("main",new ShapeScaffold(true));
+        add("main",new StoredShape.ShapeScaffold(true));
 
         Gdx.input.setInputProcessor(this);
     }
@@ -100,17 +97,18 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             spriteBatch.end();
         }
 
-        bodyWithImage.shapeScaffold.values().forEach(this::render);
+        bodyWithImage.getShapeScaffold().values().forEach(this::render);
+        drawVectorAsPosition(bodyWithImage.getAnchor(),Color.RED);
 
     }
 
-    private void render(ShapeScaffold sbb){
-        if(sbb.shapeVectors.isEmpty()){
+    private void render(StoredShape.ShapeScaffold sbb){
+        if(sbb.shapeVectors().isEmpty()){
             return;
         }
         Vector2 previous = null;
 
-        for(Vector2 vector2: sbb.shapeVectors){
+        for(Vector2 vector2: sbb.shapeVectors()){
             drawVectorAsPosition(vector2);
             if(previous!=null ){
                 drawLine(previous,vector2);
@@ -118,17 +116,20 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             previous = vector2;
         }
 
-        if(sbb.isContinuous) {
+        if(sbb.isContinuous()) {
             drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
         }
-
 
     }
 
     private void drawVectorAsPosition(Vector2 vector2){
+        drawVectorAsPosition(vector2,Color.GREEN);
+    }
+
+    private void drawVectorAsPosition(Vector2 vector2, Color color){
         float size = POINT_WORLD_SIZE;
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.setColor(color);
         shapeRenderer.rect(vector2.x-size/2,vector2.y-size/2,size,size);
         shapeRenderer.end();
     }
@@ -197,14 +198,14 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         if(character == 'n'){
             if(currentShapeScaffold !=null){
                 selectedVector = new Vector2(currentMousePosition);
-                currentShapeScaffold.shapeVectors.add(selectedVector);
+                currentShapeScaffold.shapeVectors().add(selectedVector);
                 return true;
             }
         }
 
         if(character == '\b'){
             if(currentShapeScaffold !=null && selectedVector != null){
-                currentShapeScaffold.shapeVectors.remove(selectedVector);
+                currentShapeScaffold.shapeVectors().remove(selectedVector);
                 selectedVector = null;
                 return true;
             }
@@ -223,6 +224,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
                 return true;
             } else {
                 selectedVector = getVector((float) screenX, (float) screenY)
+                    .or(()-> atMousePosition(this.bodyWithImage.getAnchor(),screenX,screenY) ? Optional.of(bodyWithImage.getAnchor()): Optional.empty())
                     .orElse(null);
                 return true;
             }
@@ -330,37 +332,26 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         if(currentShapeScaffold == null){
             return Optional.empty();
         }
-        Vector2 screenCoordinates = viewport.unproject(new Vector2(screenX , screenY ));
 
-        float size = POINT_WORLD_SIZE;
-
-        return currentShapeScaffold.shapeVectors.stream()
-            .filter(x->vertexInBound(x,screenCoordinates.x-size,screenCoordinates.x+size,
-                screenCoordinates.y-size,screenCoordinates.y+size))
+        return currentShapeScaffold.shapeVectors().stream()
+            .filter(x-> atMousePosition(x,screenX,screenY))
             .findAny();
     }
 
-    public void add(String name, ShapeScaffold shapeScaffold){
+    public boolean atMousePosition(Vector2 vector2, float screenX, float screenY){
+        Vector2 screenCoordinates = viewport.unproject(new Vector2(screenX , screenY ));
+        float size = POINT_WORLD_SIZE;
+        return vertexInBound(vector2,screenCoordinates.x-size,screenCoordinates.x+size,
+            screenCoordinates.y-size,screenCoordinates.y+size);
+    }
+
+    public void add(String name, StoredShape.ShapeScaffold shapeScaffold){
         this.currentShapeScaffold = shapeScaffold;
-        this.bodyWithImage.shapeScaffold.put(name,shapeScaffold);
+        this.bodyWithImage.getShapeScaffold().put(name,shapeScaffold);
     }
 
     private static boolean vertexInBound(Vector2 theVector, float minX, float maxX, float minY, float maxY) {
         return theVector.x >= minX && theVector.x <= maxX && theVector.y >= minY && theVector.y <= maxY;
-    }
-
-    public record BodyWithImage(Map<String, ShapeScaffold> shapeScaffold){
-        public BodyWithImage(){
-            this(new HashMap<>());
-        }
-    }
-
-    public record ShapeScaffold(List<Vector2> shapeVectors,
-                                 boolean isContinuous) {
-
-        public ShapeScaffold(boolean isContinuous) {
-            this(new ArrayList<>(), isContinuous);
-        }
     }
 
 }
