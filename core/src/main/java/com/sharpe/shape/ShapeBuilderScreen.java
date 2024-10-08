@@ -3,7 +3,6 @@ package com.sharpe.shape;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
@@ -15,24 +14,23 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class ShapeBuilderScreen implements Screen, InputProcessor {
 
-    private final List<ShapeBeingBuilt> shapesBeingBuilt = new ArrayList<>();
-    private ShapeBeingBuilt currentShapeBeingBuilt;
+    private final BodyWithImage bodyWithImage = new BodyWithImage();
+    private ShapeScaffold currentShapeScaffold;
     private Vector2 selectedVector;
     private Vector2 currentMousePosition;
 
@@ -49,8 +47,6 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     private Sprite sprite;
 
     private static final float POINT_WORLD_SIZE=.015f;
-
-    private static final float WORLD_SIZE = 500;
 
     public ShapeBuilderScreen(InputProcessor wrappedInputProcessor) {
         this.wrappedInputProcessor = wrappedInputProcessor;
@@ -69,7 +65,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
-        add(new ShapeBeingBuilt());
+        add("main",new ShapeScaffold(false,false));
 
         Gdx.input.setInputProcessor(this);
     }
@@ -96,11 +92,11 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             spriteBatch.end();
         }
 
-        shapesBeingBuilt.forEach(this::render);
+        bodyWithImage.shapeScaffold.values().forEach(this::render);
 
     }
 
-    private void render(ShapeBeingBuilt sbb){
+    private void render(ShapeScaffold sbb){
         if(sbb.shapeVectors.isEmpty()){
             return;
         }
@@ -189,9 +185,16 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         }
 
         if(character == 'n'){
-            if(currentShapeBeingBuilt!=null){
+            if(currentShapeScaffold !=null){
                 selectedVector = new Vector2(currentMousePosition);
-                currentShapeBeingBuilt.shapeVectors.add(selectedVector);
+                currentShapeScaffold.shapeVectors.add(selectedVector);
+            }
+        }
+
+        if(character == '\b'){
+            if(currentShapeScaffold !=null && selectedVector != null){
+                currentShapeScaffold.shapeVectors.remove(selectedVector);
+                selectedVector = null;
             }
         }
         return false;
@@ -280,7 +283,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             throw new IllegalStateException("Must be saved to a json file");
         }
         try {
-            objectMapper.writeValue(file,shapesBeingBuilt);
+            objectMapper.writeValue(file,bodyWithImage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -311,32 +314,41 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     }
 
     private Optional<Vector2> getVector(final float screenX, final float screenY) {
-        if(currentShapeBeingBuilt == null){
+        if(currentShapeScaffold == null){
             return Optional.empty();
         }
         Vector2 screenCoordinates = viewport.unproject(new Vector2(screenX , screenY ));
 
         float size = POINT_WORLD_SIZE;
 
-        return currentShapeBeingBuilt.shapeVectors.stream()
+        return currentShapeScaffold.shapeVectors.stream()
             .filter(x->vertexInBound(x,screenCoordinates.x-size,screenCoordinates.x+size,
                 screenCoordinates.y-size,screenCoordinates.y+size))
             .findAny();
     }
 
-    private void add(ShapeBeingBuilt shapeBeingBuilt){
-        this.currentShapeBeingBuilt = shapeBeingBuilt;
-        this.shapesBeingBuilt.add(shapeBeingBuilt);
+    private void add(String name, ShapeScaffold shapeScaffold){
+        this.currentShapeScaffold = shapeScaffold;
+        this.bodyWithImage.shapeScaffold.put(name,shapeScaffold);
     }
 
     private static boolean vertexInBound(Vector2 theVector, float minX, float maxX, float minY, float maxY) {
         return theVector.x >= minX && theVector.x <= maxX && theVector.y >= minY && theVector.y <= maxY;
     }
 
-    private record ShapeBeingBuilt(List<Vector2> shapeVectors) {
+    private record BodyWithImage(Map<String, ShapeScaffold> shapeScaffold){
+        public BodyWithImage(){
+            this(new HashMap<>());
+        }
+    }
 
-        private ShapeBeingBuilt() {
-            this(new ArrayList<>());
+    private record ShapeScaffold(List<Vector2> shapeVectors,
+                                 boolean isSensor,
+                                 boolean isContinuous) {
+
+        public ShapeScaffold(boolean isSensor,
+                             boolean isContinuous) {
+            this(new ArrayList<>(),isSensor, isContinuous);
         }
     }
 
