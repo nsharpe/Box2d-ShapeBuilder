@@ -17,7 +17,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sharpe.shape.builder.StoredShape;
+import com.sharpe.shape.builder.FixtureWithImage;
+import com.sharpe.shape.builder.ShapeScaffold;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -26,8 +27,8 @@ import java.util.Optional;
 
 public class ShapeBuilderScreen implements Screen, InputProcessor {
 
-    private final StoredShape.BodyWithImage bodyWithImage = new StoredShape.BodyWithImage();
-    private StoredShape.ShapeScaffold currentShapeScaffold;
+    private final FixtureWithImage fixtureWithImage = new FixtureWithImage();
+    private ShapeScaffold currentShapeScaffold;
     private Vector2 selectedVector;
     private Vector2 currentMousePosition;
 
@@ -62,7 +63,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
-        add("main",new StoredShape.ShapeScaffold(true));
+        add("main",new ShapeScaffold(true));
 
         Gdx.input.setInputProcessor(this);
     }
@@ -97,12 +98,12 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             spriteBatch.end();
         }
 
-        bodyWithImage.getShapeScaffold().values().forEach(this::render);
-        drawVectorAsPosition(bodyWithImage.getAnchor(),Color.RED);
+        fixtureWithImage.getShapeScaffold().values().forEach(this::render);
+        drawVectorAsPosition(fixtureWithImage.getAnchor(),Color.RED);
 
     }
 
-    private void render(StoredShape.ShapeScaffold sbb){
+    private void render(ShapeScaffold sbb){
         if(sbb.shapeVectors().isEmpty()){
             return;
         }
@@ -116,7 +117,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             previous = vector2;
         }
 
-        if(sbb.isContinuous()) {
+        if(sbb.isEdge()) {
             drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
         }
 
@@ -224,7 +225,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
                 return true;
             } else {
                 selectedVector = getVector((float) screenX, (float) screenY)
-                    .or(()-> atMousePosition(this.bodyWithImage.getAnchor(),screenX,screenY) ? Optional.of(bodyWithImage.getAnchor()): Optional.empty())
+                    .or(()-> atMousePosition(this.fixtureWithImage.getAnchor(),screenX,screenY) ? Optional.of(fixtureWithImage.getAnchor()): Optional.empty())
                     .orElse(null);
                 return true;
             }
@@ -274,7 +275,6 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             return true;
         }
         currentMousePosition = viewport.unproject(new Vector2(screenX,screenY));
-        System.out.println(currentMousePosition);
 
         if(selectedVector!=null){
             selectedVector.set(currentMousePosition);
@@ -294,11 +294,12 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if(!FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("json")){
-            System.out.println("throwing exception:"+file.getName());
-            throw new IllegalStateException("Must be saved to a json file");
+            RuntimeException rte = new IllegalStateException("Must be saved to a json file");
+            Gdx.app.error("ShapeBuilderScreen","Error loading shape", rte);
+            throw rte;
         }
         try {
-            objectMapper.writeValue(file,bodyWithImage);
+            objectMapper.writeValue(file, fixtureWithImage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -314,10 +315,10 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         float width = currentTexture.getWidth();
 
         if(height > width){
-            width = height/width;
+            width = width/height;
             height = 1;
         }else{
-            height = width/height;
+            height = height/width;
             width = 1;
         }
 
@@ -345,9 +346,9 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             screenCoordinates.y-size,screenCoordinates.y+size);
     }
 
-    public void add(String name, StoredShape.ShapeScaffold shapeScaffold){
+    public void add(String name, ShapeScaffold shapeScaffold){
         this.currentShapeScaffold = shapeScaffold;
-        this.bodyWithImage.getShapeScaffold().put(name,shapeScaffold);
+        this.fixtureWithImage.getShapeScaffold().put(name,shapeScaffold);
     }
 
     private static boolean vertexInBound(Vector2 theVector, float minX, float maxX, float minY, float maxY) {

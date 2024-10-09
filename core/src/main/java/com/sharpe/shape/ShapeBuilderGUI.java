@@ -22,7 +22,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.sharpe.libgdx.file.SinglePathChooserListener;
-import com.sharpe.shape.builder.StoredShape;
+import com.sharpe.shape.builder.ShapeScaffold;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -200,7 +200,7 @@ public class ShapeBuilderGUI implements Screen {
         TextField nameField = new TextField("",skin);
         Dialog dialog = new Dialog("Create Shape", skin, "dialog") {
             public void result(Object obj) {
-                shapeBuilderScreen.add(nameField.getText(),new StoredShape.ShapeScaffold(false));
+                shapeBuilderScreen.add(nameField.getText(),new ShapeScaffold(false));
             }
         };
         dialog.text("Create Shape");

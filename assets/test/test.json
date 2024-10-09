@@ -1,0 +1,56 @@
+{
+  "shapeScaffold": {
+    "main": {
+      "shapeVectors": [
+        {
+          "x": -0.5,
+          "y": -0.13863635,
+          "zero": false,
+          "unit": false
+        },
+        {
+          "x": 0.49772727,
+          "y": -0.1431818,
+          "zero": false,
+          "unit": false
+        },
+        {
+          "x": 0.49545455,
+          "y": 0.1431818,
+          "zero": false,
+          "unit": false
+        },
+        {
+          "x": -0.5022727,
+          "y": 0.14772725,
+          "zero": false,
+          "unit": false
+        }
+      ],
+      "isEdge": true
+    },
+    "sensor": {
+      "shapeVectors": [
+        {
+          "x": 0.5022727,
+          "y": 0.20227277,
+          "zero": false,
+          "unit": false
+        },
+        {
+          "x": -0.5,
+          "y": 0.20909095,
+          "zero": false,
+          "unit": false
+        }
+      ],
+      "isEdge": false
+    }
+  },
+  "anchor": {
+    "x": 0.00454545,
+    "y": -0.14090908,
+    "zero": false,
+    "unit": false
+  }
+}

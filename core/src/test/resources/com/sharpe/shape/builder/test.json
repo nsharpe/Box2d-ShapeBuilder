@@ -1,0 +1,42 @@
+{
+  "shapeScaffold": {
+    "main": {
+      "shapeVectors": [
+        {
+          "x": -0.5,
+          "y": 0
+        },
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 0.5,
+          "y": 0.5
+        },
+        {
+          "x": -0.5,
+          "y": 0.5
+        }
+      ],
+      "isEdge": false
+    },
+    "sensor": {
+      "shapeVectors": [
+        {
+          "x": 0.6,
+          "y": 0
+        },
+        {
+          "x": -0.6,
+          "y": 0
+        }
+      ],
+      "isEdge": true
+    }
+  },
+  "anchor": {
+    "x": 1,
+    "y": -1
+  }
+}

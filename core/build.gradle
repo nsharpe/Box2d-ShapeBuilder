@@ -1,6 +1,10 @@
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
 
+test{
+  useJUnitPlatform()
+}
+
 dependencies {
   // https://mvnrepository.com/artifact/org.projectlombok/lombok
   compileOnly 'org.projectlombok:lombok:1.18.34'
@@ -25,4 +29,16 @@ dependencies {
   api "com.github.crykn:libgdx-screenmanager:$screenManagerVersion"
   api "org.apache.groovy:groovy-all:$groovyVersion"
   api "space.earlygrey:shapedrawer:$shapeDrawerVersion"
+
+  // Not included to allow for the application to be deployed in a non desktop instance
+  testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  testImplementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+  testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  testImplementation("com.badlogicgames.gdx:gdx-tools:$gdxVersion"){exclude group: 'com.badlogicgames.gdx', module: 'gdx-backend-lwjgl'}
+
+  // https://mvnrepository.com/artifact/org.mockito/mockito-core
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.13.0'
+  testCompileOnly 'org.junit.jupiter:junit-jupiter-api:5.11.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+  testCompileOnly 'org.apiguardian:apiguardian-api:1.0.0'
 }
