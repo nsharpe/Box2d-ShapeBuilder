@@ -200,7 +200,7 @@ public class ShapeBuilderGUI implements Screen {
         TextField nameField = new TextField("",skin);
         Dialog dialog = new Dialog("Create Shape", skin, "dialog") {
             public void result(Object obj) {
-                shapeBuilderScreen.add(nameField.getText(),new ShapeScaffold(false));
+                shapeBuilderScreen.add(nameField.getText(),new ShapeScaffold(true));
             }
         };
         dialog.text("Create Shape");

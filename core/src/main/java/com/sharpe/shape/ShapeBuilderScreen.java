@@ -17,8 +17,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sharpe.shape.builder.FixtureWithImage;
 import com.sharpe.shape.builder.ShapeScaffold;
+import com.sharpe.shape.serialization.Vector2JsonDeserializer;
+import com.sharpe.shape.serialization.Vector2JsonSerializer;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -43,11 +46,18 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     private Color backgroudColor = Color.DARK_GRAY;
 
     private Sprite sprite;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     private static final float POINT_WORLD_SIZE=.015f;
 
     public ShapeBuilderScreen(InputProcessor wrappedInputProcessor) {
         this.wrappedInputProcessor = wrappedInputProcessor;
+
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Vector2.class, new Vector2JsonSerializer());
+        module.addDeserializer(Vector2.class,new Vector2JsonDeserializer());
+
+        objectMapper.registerModule(module);
     }
 
     @Override
@@ -63,7 +73,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         spriteBatch = new SpriteBatch();
 
         this.shapeRenderer = new ShapeRenderer();
-        add("main",new ShapeScaffold(true));
+        add("main",new ShapeScaffold(false));
 
         Gdx.input.setInputProcessor(this);
     }
@@ -117,7 +127,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
             previous = vector2;
         }
 
-        if(sbb.isEdge()) {
+        if(!sbb.isEdge()) {
             drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
         }
 
@@ -291,14 +301,13 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     }
 
     public void save(File file){
-        ObjectMapper objectMapper = new ObjectMapper();
-
         if(!FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("json")){
             RuntimeException rte = new IllegalStateException("Must be saved to a json file");
             Gdx.app.error("ShapeBuilderScreen","Error loading shape", rte);
             throw rte;
         }
         try {
+            fixtureWithImage.setImageLocation(file.toPath().getParent().relativize(new File(fixtureWithImage.getImageLocation()).toPath()).toString());
             objectMapper.writeValue(file, fixtureWithImage);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -309,6 +318,8 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         if (currentTexture != null) {
             currentTexture.dispose();
         }
+
+        fixtureWithImage.setImageLocation(file.getAbsolutePath());
 
         currentTexture = new Texture(new FileHandle(file));
         float height = currentTexture.getHeight();
