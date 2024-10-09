@@ -11,6 +11,7 @@ This project will use libgdx instead of the swing/libgdx combo of box2d-Editor t
 ## Platforms
 
 - `core`: Main module with the application logic shared by all platforms.
+  - This can be published to local maven via`./gradlew clean core:publishToMavenLocal`
 - `lwjgl3`: Primary desktop platform using LWJGL3.
 
 ## Gradle

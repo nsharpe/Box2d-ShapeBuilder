@@ -1,5 +1,27 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+}
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      groupId = 'com.sharpe.libgdx'
+      artifactId = 'shape'
+      version = '1.0'
+
+      from components.java
+    }
+  }
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
 
 test{
   useJUnitPlatform()
