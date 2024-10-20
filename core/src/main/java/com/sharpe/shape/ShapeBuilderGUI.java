@@ -127,8 +127,8 @@ public class ShapeBuilderGUI implements Screen {
     private void saveShape(Path path){
         preferences.putString("startingDirectory",path.getParent().toString());
         preferences.flush();
-        if(!path.toString().endsWith(".json")){
-            path = new File(path.toString()+".json").toPath();
+        if(!path.toString().endsWith(".fixture")){
+            path = new File(path.toString()+".fixture").toPath();
         }
         try {
             this.shapeBuilderScreen.save(path.toFile());

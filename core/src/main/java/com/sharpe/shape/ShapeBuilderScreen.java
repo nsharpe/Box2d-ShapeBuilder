@@ -67,8 +67,8 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         viewport = new FitViewport(Gdx.graphics.getWidth(),
             Gdx.graphics.getHeight(),
             camera);
-        viewport.setWorldHeight(2);
-        viewport.setWorldWidth(2);
+        viewport.setWorldHeight(1.25f);
+        viewport.setWorldWidth(1.25f);
 
         spriteBatch = new SpriteBatch();
 
@@ -301,8 +301,8 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     }
 
     public void save(File file){
-        if(!FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("json")){
-            RuntimeException rte = new IllegalStateException("Must be saved to a json file");
+        if(!FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("fixture")){
+            RuntimeException rte = new IllegalStateException("Must be saved to a fixture file");
             Gdx.app.error("ShapeBuilderScreen","Error loading shape", rte);
             throw rte;
         }
