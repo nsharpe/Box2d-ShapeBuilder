@@ -8,13 +8,16 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
@@ -46,6 +49,8 @@ public class ShapeBuilderGUI implements Screen {
     private FileChooser imageLoader;
     private FileChooser fixtureLoader;
     private Preferences preferences;
+
+    private SelectBox<String> scafoldSelector;
 
     @Override
     public void show() {
@@ -101,12 +106,23 @@ public class ShapeBuilderGUI implements Screen {
         //Set table to fill stage
         controlTable.setFillParent(true);
 
+        scafoldSelector = new SelectBox<>(skin);
+        scafoldSelector.setItems("main");
+        scafoldSelector.setSelected("main");
+        scafoldSelector.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                shapeBuilderScreen.setCurrentShapeScaffold(shapeBuilderScreen.getShapeScaffolds().get(scafoldSelector.getSelected()));
+            }
+        });
         TextButton newShapeButton = textButton("New Shape", this::createShapeNameDialogue);
         TextButton loadImage = textButton("Load Image", this::openLoadImage);
         TextButton loadFixture = textButton("Load Fixture", this::openLoadFixture);
         TextButton saveButton = textButton("Save", this::openSaveBody);
         TextButton exitButton = textButton("Exit",() -> Gdx.app.exit());
 
+        controlTable.add(scafoldSelector);
+        controlTable.row();
         controlTable.add(newShapeButton);
         controlTable.row();
         controlTable.add(loadImage);
@@ -144,7 +160,7 @@ public class ShapeBuilderGUI implements Screen {
         preferences.putString("startingDirectory",path.getParent().toString());
         preferences.flush();
         if(!path.toString().endsWith(".fixture")){
-            path = new File(path.toString()+".fixture").toPath();
+            path = new File(path+".fixture").toPath();
         }
         try {
             this.shapeBuilderScreen.save(path.toFile());
@@ -171,6 +187,10 @@ public class ShapeBuilderGUI implements Screen {
         preferences.putString("startingDirectory",path.getParent().toString());
         preferences.flush();
         this.shapeBuilderScreen.loadFixture(path.toFile());
+
+        this.scafoldSelector.setItems(shapeBuilderScreen.getShapeScaffolds().keySet().stream().sorted().toArray(String[]::new));
+        this.scafoldSelector.setSelected("main");
+        shapeBuilderScreen.setCurrentShapeScaffold(shapeBuilderScreen.getShapeScaffolds().get(scafoldSelector.getSelected()));
     }
 
     @Override

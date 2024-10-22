@@ -23,16 +23,20 @@ import com.sharpe.shape.builder.FixtureWithImage;
 import com.sharpe.shape.builder.ShapeScaffold;
 import com.sharpe.shape.serialization.Vector2JsonDeserializer;
 import com.sharpe.shape.serialization.Vector2JsonSerializer;
+import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class ShapeBuilderScreen implements Screen, InputProcessor {
 
     private FixtureWithImage fixtureWithImage = new FixtureWithImage();
+    @Setter
     private ShapeScaffold currentShapeScaffold;
     private Vector2 selectedVector;
     private Vector2 currentMousePosition;
@@ -386,6 +390,10 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     public void add(String name, ShapeScaffold shapeScaffold){
         this.currentShapeScaffold = shapeScaffold;
         this.fixtureWithImage.getShapeScaffold().put(name,shapeScaffold);
+    }
+
+    public Map<String,ShapeScaffold> getShapeScaffolds(){
+        return fixtureWithImage.getShapeScaffold();
     }
 
     private static boolean vertexInBound(Vector2 theVector, float minX, float maxX, float minY, float maxY) {
