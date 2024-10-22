@@ -44,6 +44,7 @@ public class ShapeBuilderGUI implements Screen {
 
     private FileChooser bodySaver;
     private FileChooser imageLoader;
+    private FileChooser fixtureLoader;
     private Preferences preferences;
 
     @Override
@@ -61,6 +62,7 @@ public class ShapeBuilderGUI implements Screen {
 
         bodySaver = new FileChooser(FileChooser.Mode.SAVE);
         imageLoader = new FileChooser(FileChooser.Mode.OPEN);
+        fixtureLoader = new FileChooser(FileChooser.Mode.OPEN);
         String startingDirectory = preferences.getString("startingDirectory");
         if(startingDirectory != null) {
             imageLoader.setDirectory(startingDirectory);
@@ -75,6 +77,13 @@ public class ShapeBuilderGUI implements Screen {
         imageLoader.setListener(SinglePathChooserListener.of(x->
             x.ifPresent(this::imageLoader)
         ));
+
+        fixtureLoader.setFileFilter((file)->
+            file.canRead()
+                && !file.isHidden()
+                && (FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("fixture")|| file.isDirectory()));
+        fixtureLoader.setMultiSelectionEnabled(false);
+        fixtureLoader.setListener(SinglePathChooserListener.of(x->x.ifPresent(this::fixtureLoader)));
 
         bodySaver.setListener(SinglePathChooserListener.of(x->x.ifPresent(this::saveShape)));
 
@@ -94,12 +103,15 @@ public class ShapeBuilderGUI implements Screen {
 
         TextButton newShapeButton = textButton("New Shape", this::createShapeNameDialogue);
         TextButton loadImage = textButton("Load Image", this::openLoadImage);
+        TextButton loadFixture = textButton("Load Fixture", this::openLoadFixture);
         TextButton saveButton = textButton("Save", this::openSaveBody);
         TextButton exitButton = textButton("Exit",() -> Gdx.app.exit());
 
         controlTable.add(newShapeButton);
         controlTable.row();
         controlTable.add(loadImage);
+        controlTable.row();
+        controlTable.add(loadFixture);
         controlTable.row();
         controlTable.add(saveButton);
         controlTable.row();
@@ -122,6 +134,10 @@ public class ShapeBuilderGUI implements Screen {
 
     private void openLoadImage(){
         menu.addActor(imageLoader);
+    }
+
+    private void openLoadFixture(){
+        menu.addActor(fixtureLoader);
     }
 
     private void saveShape(Path path){
@@ -149,6 +165,12 @@ public class ShapeBuilderGUI implements Screen {
         preferences.putString("startingDirectory",path.getParent().toString());
         preferences.flush();
         this.shapeBuilderScreen.loadTexture(path.toFile());
+    }
+
+    private void fixtureLoader(Path path){
+        preferences.putString("startingDirectory",path.getParent().toString());
+        preferences.flush();
+        this.shapeBuilderScreen.loadFixture(path.toFile());
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
@@ -26,14 +27,17 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class ShapeBuilderScreen implements Screen, InputProcessor {
 
-    private final FixtureWithImage fixtureWithImage = new FixtureWithImage();
+    private FixtureWithImage fixtureWithImage = new FixtureWithImage();
     private ShapeScaffold currentShapeScaffold;
     private Vector2 selectedVector;
     private Vector2 currentMousePosition;
+
+    private AssetManager assetManager;
 
     private Viewport viewport;
     private Camera camera;
@@ -62,7 +66,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
     @Override
     public void show() {
-
+        assetManager = new AssetManager();
         camera = new OrthographicCamera();
         viewport = new FitViewport(Gdx.graphics.getWidth(),
             Gdx.graphics.getHeight(),
@@ -181,6 +185,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         }
         spriteBatch.dispose();
         shapeRenderer.dispose();
+        assetManager.dispose();
     }
 
     @Override
@@ -321,7 +326,28 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
 
         fixtureWithImage.setImageLocation(file.getAbsolutePath());
 
-        currentTexture = new Texture(new FileHandle(file));
+       setCurrentTexture( new Texture(new FileHandle(file)));
+
+    }
+
+    public void loadFixture(File file){
+        try {
+            fixtureWithImage = objectMapper.readValue(file, FixtureWithImage.class);
+            Path textureFile = file.toPath().resolveSibling(fixtureWithImage.getImageLocation());
+            System.out.println("textureFile: "+textureFile);
+            assetManager.load(textureFile.toString(), Texture.class);
+            assetManager.finishLoading();
+            setCurrentTexture( assetManager.get(textureFile.toString(),Texture.class) );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setCurrentTexture(Texture texture){
+        if(currentTexture != null){
+            currentTexture.dispose();
+        }
+        currentTexture = texture;
         float height = currentTexture.getHeight();
         float width = currentTexture.getWidth();
 
