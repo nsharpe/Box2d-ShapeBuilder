@@ -72,6 +72,7 @@ public class ShapeBuilderGUI implements Screen {
         if(startingDirectory != null) {
             imageLoader.setDirectory(startingDirectory);
             bodySaver.setDirectory(startingDirectory);
+            fixtureLoader.setDirectory(startingDirectory);
         }
         imageLoader.setFileFilter((file)->
                     file.canRead()
