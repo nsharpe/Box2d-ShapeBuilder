@@ -122,21 +122,25 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     }
 
     private void render(ShapeScaffold sbb){
+        Color color = Color.BLUE;
+        if(sbb == currentShapeScaffold){
+            color = Color.GREEN;
+        }
         if(sbb.shapeVectors().isEmpty()){
             return;
         }
         Vector2 previous = null;
 
         for(Vector2 vector2: sbb.shapeVectors()){
-            drawVectorAsPosition(vector2);
+            drawVectorAsPosition(vector2,color);
             if(previous!=null ){
-                drawLine(previous,vector2);
+                drawLine(previous,vector2,color);
             }
             previous = vector2;
         }
 
         if(!sbb.isEdge()) {
-            drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast());
+            drawLine(sbb.shapeVectors().getFirst(), sbb.shapeVectors().getLast(),color);
         }
 
     }
@@ -153,9 +157,9 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
         shapeRenderer.end();
     }
 
-    private void drawLine(Vector2 start, Vector2 end){
+    private void drawLine(Vector2 start, Vector2 end,Color color){
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.setColor(color);
         shapeRenderer.line(start,end);
         shapeRenderer.end();
     }
@@ -337,6 +341,7 @@ public class ShapeBuilderScreen implements Screen, InputProcessor {
     public void loadFixture(File file){
         try {
             fixtureWithImage = objectMapper.readValue(file, FixtureWithImage.class);
+            fixtureWithImage.setImageLocation(file.toPath().resolveSibling(fixtureWithImage.getImageLocation()).toString());
             Path textureFile = file.toPath().resolveSibling(fixtureWithImage.getImageLocation());
             System.out.println("textureFile: "+textureFile);
             assetManager.load(textureFile.toString(), Texture.class);
